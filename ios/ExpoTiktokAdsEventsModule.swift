@@ -24,7 +24,7 @@ public class ExpoTiktokAdsEventsModule: Module {
         config?.debugModeEnabled = true
         TikTokBusiness.initializeSdk(config){ success, error in
           if (success) {
-              promise.resolve("initialization successful")
+              promise.resolve("initialization successful" + TikTokBusiness.getInstance().anonymousID)
           } else {
               let message = error?.localizedDescription ?? "unknown"
               promise.reject("ERR_TIKTOK_INIT", message)
@@ -33,15 +33,15 @@ public class ExpoTiktokAdsEventsModule: Module {
     }
     
     AsyncFunction("getAnonymousID") { () -> String in
-      TikTokBusiness.getInstance().anonymousID
+      return TikTokBusiness.getInstance().anonymousID
     }
 
     AsyncFunction("getAccessToken") { () -> String in
-      TikTokBusiness.getInstance().accessToken
+      return TikTokBusiness.getInstance().accessToken
     }
 
     AsyncFunction("getTestEventCode") { () -> String in
-      TikTokBusiness.getTestEventCode()
+      return TikTokBusiness.getTestEventCode()
     }
 
     AsyncFunction("trackCustomEvent") { (eventName: String, eventID: String, properties: [[String: Any]]?) in

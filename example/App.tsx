@@ -1,46 +1,114 @@
-import {useEvent} from "expo";
-import TiktokAdsEvents, { TikTokLaunchApp, TikTokStandardEvents } from "expo-tiktok-ads-events";
-import { requestTrackingPermissionsAsync } from "expo-tracking-transparency";
-import { useEffect } from "react";
-import {Button, Text, View} from "react-native";
-import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+import TiktokAdsEvents, {TikTokLaunchApp, TikTokStandardEvents} from "expo-tiktok-ads-events";
+import {requestTrackingPermissionsAsync} from "expo-tracking-transparency";
+import {useEffect, useMemo, useState} from "react";
+import {Alert, Pressable, StyleSheet, ScrollView, Text, View} from "react-native";
+import {SafeAreaProvider, SafeAreaView} from "react-native-safe-area-context";
 
 export default function App() {
+    const eventEntries = useMemo(
+        () => Object.entries(TikTokStandardEvents) as [keyof typeof TikTokStandardEvents, string][],
+        [],
+    );
+    const [selectedEventKey, setSelectedEventKey] = useState<keyof typeof TikTokStandardEvents>(
+        eventEntries[0]?.[0] ?? "launch_app",
+    );
+    const selectedEventValue = TikTokStandardEvents[selectedEventKey];
+    const [anonymousID, setAnonymousID] = useState<string>("");
+    const [accessToken, setAccessToken] = useState<string>("");
+    const [testEventCode, setTestEventCode] = useState<string>("");
 
     useEffect(() => {
         (async () => {
-            const { status } = await requestTrackingPermissionsAsync();
-            await TiktokAdsEvents.initializeSdk(
-                "<APP_SECRET_KEY>",
-                "<APP_ID>", 
-                "<TIKTOK_APP_ID>");
-            TiktokAdsEvents.identify("USER_ID00001");
-            TikTokLaunchApp();
-            const info = await TiktokAdsEvents.getAnonymousID();
-            const accessToken = await TiktokAdsEvents.getAccessToken();
-            const testEventCode = await TiktokAdsEvents.getTestEventCode();
-            console.log("AnonymousID:", info);
-            console.log("Access token:", accessToken);
-            console.log("Test event code:", testEventCode);
-        })();
+            const {status} = await requestTrackingPermissionsAsync();
 
+            const result = await TiktokAdsEvents.initializeSdk("<APP_SECRET_KEY>", "<APP_ID>", "<TIKTOK_APP_ID>");
+            alert(result);
+            alert('asdasd');
+            TiktokAdsEvents.identify("USER_ID00001");
+
+            TikTokLaunchApp();
+
+            TiktokAdsEvents.getAnonymousID()
+                .then((info) => {
+                    console.log("AnonymousID:", info);
+                    setAnonymousID(info);
+                })
+                .catch((error) => {
+                    console.error("Error getting AnonymousID:", error);
+                });
+
+            TiktokAdsEvents.getAccessToken()
+                .then((accessToken) => {
+                    console.log("Access token:", accessToken);
+                    setAccessToken(accessToken);
+                })
+                .catch((error) => {
+                    console.error("Error getting AnonymousID:", error);
+                });
+
+            TiktokAdsEvents.getTestEventCode()
+                .then((testEventCode) => {
+                    console.log("Test event code:", testEventCode);
+                    setTestEventCode(testEventCode);
+                })
+                .catch((error) => {
+                    console.error("Error getting AnonymousID:", error);
+                });
+        })();
     }, []);
 
+    const handleTrackEvent = async () => {
+        try {
+            console.log("Tracking TT Event", selectedEventValue);
+            const result = await TiktokAdsEvents.trackTTEvent(selectedEventValue, [{key: "test", value: "test"}]);
+            console.log("Result:", result);
+            Alert.alert(
+                "Track TT Event",
+                JSON.stringify({eventKey: selectedEventKey, eventName: selectedEventValue, result}, null, 2),
+            );
+        } catch (error) {
+            console.error("Error tracking event", error);
+            Alert.alert(
+                "Erro ao rastrear",
+                JSON.stringify({eventKey: selectedEventKey, message: String(error)}, null, 2),
+            );
+        }
+    };
 
     return (
         <SafeAreaProvider>
-        <SafeAreaView edges={["top", "bottom"]} style={styles.container}>
-            <Group name="TiktokAdsEvents">
-                <Button
-                    title="Track TT Event"
-                    onPress={async () => {
-                        console.log("Tracking TT Event", TikTokStandardEvents.in_app_ad_impr);
-                        const result = await TiktokAdsEvents.trackTTEvent(TikTokStandardEvents.in_app_ad_impr, [{key: "test", value: "test"}]);
-                        console.log("Result:", result);
-                    }}
-                />
-            </Group>
-        </SafeAreaView>
+            <SafeAreaView edges={["top", "bottom"]} style={styles.container}>
+                <ScrollView style={styles.scrollContainer} contentContainerStyle={styles.scrollContent}>
+                    <Group name="Identificadores">
+                        <Text style={styles.infoText}>AnonymousID: {anonymousID || "-"}</Text>
+                        <Text style={styles.infoText}>Access token: {accessToken || "-"}</Text>
+                        <Text style={styles.infoText}>Test event code: {testEventCode || "-"}</Text>
+                    </Group>
+                    <Group name="TiktokAdsEvents">
+                        <Text style={styles.infoText}>Evento selecionado: {selectedEventValue}</Text>
+
+                        {eventEntries.map(([key, value]) => {
+                            const isSelected = key === selectedEventKey;
+                            return (
+                                <Pressable
+                                    key={key}
+                                    onPress={() => setSelectedEventKey(key)}
+                                    style={[styles.eventOption, isSelected ? styles.eventOptionSelected : null]}>
+                                    <Text style={styles.eventOptionText}>{key}</Text>
+                                    <Text style={styles.eventOptionValue}>{value}</Text>
+                                </Pressable>
+                            );
+                        })}
+
+
+                    </Group>
+                </ScrollView>
+                <View style={styles.footer}>
+                <Pressable style={styles.trackButton} onPress={handleTrackEvent}>
+                            <Text style={styles.trackButtonText}>Track TT Event</Text>
+                        </Pressable>
+                </View>
+            </SafeAreaView>
         </SafeAreaProvider>
     );
 }
@@ -63,6 +131,10 @@ const styles = {
         fontSize: 20,
         marginBottom: 20,
     },
+    footer: {
+        borderRadius: 10,
+        paddingHorizontal: 20,
+    },
     group: {
         margin: 20,
         backgroundColor: "#fff",
@@ -76,5 +148,43 @@ const styles = {
     view: {
         flex: 1,
         height: 200,
+    },
+    infoText: {
+        fontSize: 16,
+    },
+    scrollContainer: {
+        marginVertical: 10,
+    },
+    scrollContent: {
+        paddingBottom: 10,
+    },
+    eventOption: {
+        borderWidth: 1,
+        borderColor: "#ccc",
+        borderRadius: 8,
+        padding: 12,
+        backgroundColor: "#f9f9f9",
+        marginBottom: 10,
+    },
+    eventOptionSelected: {
+        borderColor: "#000",
+        backgroundColor: "#e0f2ff",
+    },
+    eventOptionText: {
+        fontWeight: "600",
+        marginBottom: 4,
+    },
+    eventOptionValue: {
+        color: "#555",
+    },
+    trackButton: {
+        backgroundColor: "#000",
+        paddingVertical: 14,
+        borderRadius: 8,
+        alignItems: "center",
+    },
+    trackButtonText: {
+        color: "#fff",
+        fontWeight: "600",
     },
 };
