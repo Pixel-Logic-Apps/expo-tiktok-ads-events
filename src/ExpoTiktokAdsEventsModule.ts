@@ -30,7 +30,7 @@ export type TikTokStandardEventValue = typeof TikTokStandardEvents[TikTokStandar
 export type EventProperty = { key: string; value: string | number };
 
 declare class TiktokAdsEventsModule extends NativeModule {
-  initializeSdk(accessToken: string, appId: string, tiktokAppId: string): Promise<string>;
+  initializeSdk(accessToken: string, appId: string, tiktokAppId: string): Promise<boolean>;
   trackTTEvent(name: TikTokStandardEventValue, properties?: EventProperty[]): Promise<string>;
   trackCustomEvent(eventName: string, eventID: string, properties?: EventProperty[]): Promise<void>;
   identify(externalId: string, externalUserName?: string, phoneNumber?: string, email?: string): Promise<void>;

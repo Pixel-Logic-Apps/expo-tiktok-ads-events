@@ -21,39 +21,23 @@ export default function App() {
         (async () => {
             const {status} = await requestTrackingPermissionsAsync();
 
-            const result = await TiktokAdsEvents.initializeSdk("<APP_SECRET_KEY>", "<APP_ID>", "<TIKTOK_APP_ID>");
-            alert(result);
-            alert('asdasd');
-            TiktokAdsEvents.identify("USER_ID00001");
+            TiktokAdsEvents.initializeSdk("<APP_SECRET>", "<APP_ID>", "<TIKTOK_APP_ID>")
+            .then(async (result) => {
+                alert("result: " + result);
+                TiktokAdsEvents.identify("USER_ID00001");
+            })
+            .catch((error) => {
+                alert("error: " + error);
+            });
 
+            
             TikTokLaunchApp();
-
-            TiktokAdsEvents.getAnonymousID()
-                .then((info) => {
-                    console.log("AnonymousID:", info);
-                    setAnonymousID(info);
-                })
-                .catch((error) => {
-                    console.error("Error getting AnonymousID:", error);
-                });
-
-            TiktokAdsEvents.getAccessToken()
-                .then((accessToken) => {
-                    console.log("Access token:", accessToken);
-                    setAccessToken(accessToken);
-                })
-                .catch((error) => {
-                    console.error("Error getting AnonymousID:", error);
-                });
-
-            TiktokAdsEvents.getTestEventCode()
-                .then((testEventCode) => {
-                    console.log("Test event code:", testEventCode);
-                    setTestEventCode(testEventCode);
-                })
-                .catch((error) => {
-                    console.error("Error getting AnonymousID:", error);
-                });
+            const anonymousID = await TiktokAdsEvents.getAnonymousID();
+            const accessToken = await TiktokAdsEvents.getAccessToken();
+            const testEventCode = await TiktokAdsEvents.getTestEventCode();
+            setAnonymousID(anonymousID);
+            setAccessToken(accessToken);
+            setTestEventCode(testEventCode);
         })();
     }, []);
 
@@ -80,9 +64,18 @@ export default function App() {
             <SafeAreaView edges={["top", "bottom"]} style={styles.container}>
                 <ScrollView style={styles.scrollContainer} contentContainerStyle={styles.scrollContent}>
                     <Group name="Identificadores">
-                        <Text style={styles.infoText}>AnonymousID: {anonymousID || "-"}</Text>
-                        <Text style={styles.infoText}>Access token: {accessToken || "-"}</Text>
-                        <Text style={styles.infoText}>Test event code: {testEventCode || "-"}</Text>
+                        <Text style={styles.infoText}>
+                            AnonymousID: {"\n"}
+                            {anonymousID || "-"}
+                        </Text>
+                        <Text style={styles.infoText}>
+                            Access token: {"\n"}
+                            {accessToken || "-"}
+                        </Text>
+                        <Text style={styles.infoText}>
+                            Test event code: {"\n"}
+                            {testEventCode || "-"}
+                        </Text>
                     </Group>
                     <Group name="TiktokAdsEvents">
                         <Text style={styles.infoText}>Evento selecionado: {selectedEventValue}</Text>
@@ -99,14 +92,15 @@ export default function App() {
                                 </Pressable>
                             );
                         })}
-
-
                     </Group>
                 </ScrollView>
                 <View style={styles.footer}>
-                <Pressable style={styles.trackButton} onPress={handleTrackEvent}>
-                            <Text style={styles.trackButtonText}>Track TT Event</Text>
-                        </Pressable>
+                    <Pressable
+                        style={[styles.trackButton, {backgroundColor: anonymousID ? "#000" : "#ccc"}]}
+                        disabled={!anonymousID}
+                        onPress={handleTrackEvent}>
+                        <Text style={styles.trackButtonText}>Track TT Event</Text>
+                    </Pressable>
                 </View>
             </SafeAreaView>
         </SafeAreaProvider>
@@ -122,7 +116,7 @@ function Group(props: {name: string; children: React.ReactNode}) {
     );
 }
 
-const styles = {
+const styles = StyleSheet.create({
     header: {
         fontSize: 30,
         margin: 20,
@@ -150,7 +144,8 @@ const styles = {
         height: 200,
     },
     infoText: {
-        fontSize: 16,
+        fontSize: 14,
+        marginBottom: 10,
     },
     scrollContainer: {
         marginVertical: 10,
@@ -187,4 +182,4 @@ const styles = {
         color: "#fff",
         fontWeight: "600",
     },
-};
+});

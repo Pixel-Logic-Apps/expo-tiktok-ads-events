@@ -15,21 +15,15 @@ public class ExpoTiktokAdsEventsModule: Module {
   public func definition() -> ModuleDefinition {
     Name("TiktokAdsEvents")
 
-    AsyncFunction("initializeSdk") { (accessToken: String, appId: String, tiktokAppId: String, promise: Promise) in
+    AsyncFunction("initializeSdk") { (accessToken: String, appId: String, tiktokAppId: String) -> Bool in
         let config = TikTokConfig.init(accessToken: accessToken, appId: appId, tiktokAppId: tiktokAppId)
         config?.trackingEnabled = true
         config?.launchTrackingEnabled = true
         config?.retentionTrackingEnabled = true
         config?.skAdNetworkSupportEnabled = true
         config?.debugModeEnabled = true
-        TikTokBusiness.initializeSdk(config){ success, error in
-          if (success) {
-              promise.resolve("initialization successful" + TikTokBusiness.getInstance().anonymousID)
-          } else {
-              let message = error?.localizedDescription ?? "unknown"
-              promise.reject("ERR_TIKTOK_INIT", message)
-          }
-        }
+        let res = try await TikTokBusiness.initializeSdk(config)
+        return res
     }
     
     AsyncFunction("getAnonymousID") { () -> String in
