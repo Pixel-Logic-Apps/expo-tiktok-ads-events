@@ -6,16 +6,22 @@ import {Button, Text, View} from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 
 export default function App() {
-    const onChangePayload = useEvent(TiktokAdsEvents, "onChange");
 
     useEffect(() => {
         (async () => {
             const { status } = await requestTrackingPermissionsAsync();
-            const result = await TiktokAdsEvents.initializeSdk(
-                "TTQxKwOmbqLWpjTsbJZhgcpsmwCXsFQx",
-                "6752616459", 
-                "7552104294998786049");
-            console.log("Initialize SDK result:", result);
+            await TiktokAdsEvents.initializeSdk(
+                "<APP_SECRET_KEY>",
+                "<APP_ID>", 
+                "<TIKTOK_APP_ID>");
+            TiktokAdsEvents.identify("USER_ID00001");
+            TikTokLaunchApp();
+            const info = await TiktokAdsEvents.getAnonymousID();
+            const accessToken = await TiktokAdsEvents.getAccessToken();
+            const testEventCode = await TiktokAdsEvents.getTestEventCode();
+            console.log("AnonymousID:", info);
+            console.log("Access token:", accessToken);
+            console.log("Test event code:", testEventCode);
         })();
 
     }, []);
@@ -28,7 +34,9 @@ export default function App() {
                 <Button
                     title="Track TT Event"
                     onPress={async () => {
-                        await TiktokAdsEvents.trackTTEvent(TikTokStandardEvents.in_app_ad_impr);
+                        console.log("Tracking TT Event", TikTokStandardEvents.in_app_ad_impr);
+                        const result = await TiktokAdsEvents.trackTTEvent(TikTokStandardEvents.in_app_ad_impr, [{key: "test", value: "test"}]);
+                        console.log("Result:", result);
                     }}
                 />
             </Group>
