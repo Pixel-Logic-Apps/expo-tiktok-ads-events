@@ -1,48 +1,57 @@
 import ExpoModulesCore
+import TikTokBusinessSDK
+import os
 
-public class ExpoTiktokAdsEventsModule: Module {
-  // Each module class must implement the definition function. The definition consists of components
-  // that describes the module's functionality and behavior.
-  // See https://docs.expo.dev/modules/module-api for more details about available components.
+public class TiktokAdsEventsModule: Module {
+    
+  private let logger = Logger(subsystem: "com.expo.tiktok-ads-events", category: "TiktokAdsEvents")
+
   public func definition() -> ModuleDefinition {
-    // Sets the name of the module that JavaScript code will use to refer to the module. Takes a string as an argument.
-    // Can be inferred from module's class name, but it's recommended to set it explicitly for clarity.
-    // The module will be accessible from `requireNativeModule('ExpoTiktokAdsEvents')` in JavaScript.
-    Name("ExpoTiktokAdsEvents")
+    Name("TiktokAdsEvents")
 
-    // Defines constant property on the module.
-    Constant("PI") {
-      Double.pi
-    }
-
-    // Defines event names that the module can send to JavaScript.
-    Events("onChange")
-
-    // Defines a JavaScript synchronous function that runs the native code on the JavaScript thread.
-    Function("hello") {
-      return "Hello world! 👋"
-    }
-
-    // Defines a JavaScript function that always returns a Promise and whose native code
-    // is by default dispatched on the different thread than the JavaScript runtime runs on.
-    AsyncFunction("setValueAsync") { (value: String) in
-      // Send an event to JavaScript.
-      self.sendEvent("onChange", [
-        "value": value
-      ])
-    }
-
-    // Enables the module to be used as a native view. Definition components that are accepted as part of the
-    // view definition: Prop, Events.
-    View(ExpoTiktokAdsEventsView.self) {
-      // Defines a setter for the `url` prop.
-      Prop("url") { (view: ExpoTiktokAdsEventsView, url: URL) in
-        if view.webView.url != url {
-          view.webView.load(URLRequest(url: url))
+    AsyncFunction("initializeSdk") { (accessToken: String, appId: String, tiktokAppId: String, promise: Promise) in
+        let config = TikTokConfig.init(accessToken: accessToken, appId: appId, tiktokAppId: tiktokAppId)
+        TikTokBusiness.initializeSdk(config){ success, error in
+          if (success) {
+              TikTokBusiness.setTrackingEnabled(true);
+              self.logger.info("initialization successful")
+              promise.resolve("initialization successful")
+          } else {
+              let message = error?.localizedDescription ?? "unknown"
+              self.logger.error("\(message, privacy: .public)")
+              promise.reject("ERR_TIKTOK_INIT", message)
+          }
         }
-      }
-
-      Events("onLoad")
+    }
+    
+    AsyncFunction("trackTTEvent") { (eventKey: String) -> String in
+        let map: [String: String] = [
+            "achieve_level": TTEventNameAchieveLevel,
+            "add_payment_info": TTEventNameAddPaymentInfo,
+            "complete_tutorial": TTEventNameCompleteTutorial,
+            "create_group": TTEventNameCreateGroup,
+            "create_role": TTEventNameCreateRole,
+            "generate_lead": TTEventNameGenerateLead,
+            "in_app_ad_click": TTEventNameInAppADClick,
+            "in_app_ad_impr": TTEventNameInAppADImpr,
+            "install_app": TTEventNameInstallApp,
+            "join_group": TTEventNameJoinGroup,
+            "launch_app": TTEventNameLaunchAPP,
+            "loan_application": TTEventNameLoanApplication,
+            "loan_approval": TTEventNameLoanApproval,
+            "loan_disbursal": TTEventNameLoanDisbursal,
+            "login": TTEventNameLogin,
+            "rate": TTEventNameRate,
+            "registration": TTEventNameRegistration,
+            "search": TTEventNameSearch,
+            "spend_credits": TTEventNameSpendCredits,
+            "start_trial": TTEventNameStartTrial,
+            "subscribe": TTEventNameSubscribe,
+            "unlock_achievement": TTEventNameUnlockAchievement
+        ]
+        let resolved = map[eventKey] ?? eventKey
+        TikTokBusiness.trackTTEvent(TikTokBaseEvent(name: resolved))
+        return TikTokBusiness.getTestEventCode()
     }
   }
 }
