@@ -10,7 +10,59 @@ npm install expo-tiktok-ads-events
 yarn add expo-tiktok-ads-events
 ```
 
+### Peer Dependencies
+
+```bash
+npm install expo-tracking-transparency
+# or
+yarn add expo-tracking-transparency
+```
+
 ## Setup
+
+### iOS Configuration
+
+#### SKAdNetwork Configuration
+
+Add the following to your `app.json` to enable proper attribution for TikTok Ads:
+
+```json
+{
+  "expo": {
+    "ios": {
+      "infoPlist": {
+        "SKAdNetworkItems": [
+          {"SKAdNetworkIdentifier": "238da6jt44.skadnetwork"},
+          {"SKAdNetworkIdentifier": "22mmun2rn5.skadnetwork"},
+          // ... add all required SKAdNetwork IDs
+          // Full list available in the example app
+        ]
+      }
+    }
+  }
+}
+```
+
+> **Note:** The complete list of 150+ SKAdNetwork IDs is available in the [example app.json](./example/app.json). These IDs are required for proper attribution of TikTok Ads campaigns.
+
+#### Tracking Permission
+
+Add to your `app.json`:
+
+```json
+{
+  "expo": {
+    "plugins": [
+      [
+        "expo-tracking-transparency",
+        {
+          "userTrackingPermission": "This identifier will be used to deliver personalized ads to you."
+        }
+      ]
+    ]
+  }
+}
+```
 
 ### Initialization
 
@@ -24,10 +76,12 @@ const { status } = await requestTrackingPermissionsAsync();
 // Initialize SDK
 await TiktokAdsEvents.initializeSdk(
   'YOUR_ACCESS_TOKEN',  // TikTok Ads Manager access token
-  'YOUR_APP_ID',        // App ID
+  'YOUR_APP_ID',        // App ID  
   'YOUR_TIKTOK_APP_ID'  // TikTok App ID
 );
 ```
+
+> **Important:** Get your credentials from [TikTok Ads Manager](https://ads.tiktok.com/)
 
 ## Usage
 
@@ -198,15 +252,20 @@ export default function App() {
 
 ### Common Properties
 
-- `currency` - Currency code (e.g., "USD", "EUR")
+- `currency` - Currency code (e.g., "USD", "EUR", "BRL")
 - `value` - Monetary value
-- `content_type` - Content type
-- `content_id` - Content ID
+- `content_type` - Content type (e.g., "product", "subscription")
+- `content_id` - Content ID or SKU
 - `content_name` - Content name
+- `content_category` - Content category
 - `quantity` - Quantity
 - `description` - Description
 - `query` - Search query
-- `status` - Status
+- `status` - Status (e.g., "success", "failed")
+- `level` - Level achieved (for gaming apps)
+- `score` - Score value
+- `success` - Success flag (boolean as string: "true"/"false")
+- `payment_method` - Payment method used
 
 ### TypeScript Types
 
@@ -244,12 +303,16 @@ The SDK is automatically configured with:
 - ✅ Retention tracking enabled
 - ✅ SKAdNetwork enabled (iOS)
 - ✅ Debug mode enabled (development)
+- ✅ Install tracking enabled
+- ✅ Auto tracking disabled (manual control)
 
-## Compatibility
+## Requirements
 
 - iOS 15.1+
 - Android (in development)
 - Expo SDK 54+
+- TikTok Business SDK
+- expo-tracking-transparency (for iOS 14+)
 
 ## Troubleshooting
 
@@ -259,6 +322,8 @@ The SDK is automatically configured with:
 2. Confirm credentials are correct
 3. Use test mode to validate events
 4. Wait up to 24 hours for production events to appear
+5. Ensure SKAdNetwork IDs are properly configured
+6. Check that the app is running on a real device (not simulator)
 
 ### Empty Anonymous ID
 
@@ -267,23 +332,31 @@ Anonymous ID is generated after successful initialization. Make sure to call `in
 ### Initialization Error
 
 Check:
-- Valid access token
-- Correct app IDs
+- Valid access token from TikTok Ads Manager
+- Correct app IDs (both App ID and TikTok App ID)
 - Internet connection
+- TikTok Business SDK is properly installed via CocoaPods
+
+### SKAdNetwork Attribution Issues
+
+- Ensure all required SKAdNetwork IDs are added to `app.json`
+- Run `npx expo prebuild` after adding SKAdNetwork configuration
+- Test on a real device (attribution doesn't work on simulator)
 
 ## API Reference
 
 ### Methods
 
-#### `initializeSdk(accessToken, appId, tiktokAppId)`
+#### `initializeSdk(accessToken, appId, tiktokAppId, debugMode?)`
 Initialize the TikTok Business SDK.
 
 **Parameters:**
 - `accessToken` (string): TikTok Ads Manager access token
 - `appId` (string): Your app ID
 - `tiktokAppId` (string): TikTok app ID
+- `debugMode` (boolean): Enable debug mode (optional, default: true in development)
 
-**Returns:** Promise<string>
+**Returns:** Promise<string> - "initialization successful" or error message
 
 #### `trackTTEvent(eventName, properties?)`
 Track a standard TikTok event.
@@ -342,9 +415,16 @@ Bruno Verçosa - [Pixel Logic Apps](https://github.com/Pixel-Logic-Apps)
 
 Contributions are welcome! Please open an issue or submit a pull request.
 
-## Links
+## Resources
 
+### Official Documentation
 - [TikTok for Business](https://business.tiktok.com/)
 - [TikTok Ads Manager](https://ads.tiktok.com/)
+- [TikTok Events Manager](https://ads.tiktok.com/events_manager/)
 - [TikTok Events API](https://business-api.tiktok.com/portal/docs)
+- [TikTok Business SDK iOS](https://github.com/tiktok/tiktok-business-ios-sdk)
+
+### Related
 - [Expo Modules Documentation](https://docs.expo.dev/modules/)
+- [SKAdNetwork Documentation](https://developer.apple.com/documentation/storekit/skadnetwork)
+- [App Tracking Transparency](https://developer.apple.com/documentation/apptrackingtransparency)
