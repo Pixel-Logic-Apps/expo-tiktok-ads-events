@@ -1,5 +1,6 @@
 import ExpoModulesCore
 import TikTokBusinessSDK
+import UIKit
 
 public class ExpoTiktokAdsEventsModule: Module {
   
@@ -15,13 +16,11 @@ public class ExpoTiktokAdsEventsModule: Module {
   public func definition() -> ModuleDefinition {
     Name("TiktokAdsEvents")
 
-    AsyncFunction("initializeSdk") { (accessToken: String, appId: String, tiktokAppId: String) -> Bool in
+      AsyncFunction("initializeSdk") { (accessToken: String, appId: String, tiktokAppId: String, debugModeEnabled: Bool) -> Bool in
         let config = TikTokConfig.init(accessToken: accessToken, appId: appId, tiktokAppId: tiktokAppId)
+        config?.debugModeEnabled = debugModeEnabled
         config?.trackingEnabled = true
-        config?.launchTrackingEnabled = true
-        config?.retentionTrackingEnabled = true
-        config?.skAdNetworkSupportEnabled = true
-        config?.debugModeEnabled = true
+        config?.automaticTrackingEnabled = true
         let res = try await TikTokBusiness.initializeSdk(config)
         return res
     }
@@ -42,6 +41,7 @@ public class ExpoTiktokAdsEventsModule: Module {
         let customEvent = TikTokBaseEvent(eventName: eventName, eventId: eventID)
         self.addPropertiesToEvent(customEvent, properties: properties)
         TikTokBusiness.trackTTEvent(customEvent)
+        TikTokBusiness.explicitlyFlush()
     }
     
     AsyncFunction("trackTTEvent") { (eventKey: String, properties: [[String: Any]]?) -> String in
@@ -72,14 +72,11 @@ public class ExpoTiktokAdsEventsModule: Module {
         let resolved = map[eventKey] ?? eventKey
         let event = TikTokBaseEvent(name: resolved)
         self.addPropertiesToEvent(event, properties: properties)
+        TikTokBusiness.explicitlyFlush()
         TikTokBusiness.trackTTEvent(event)
+        TikTokBusiness.explicitlyFlush()
+        
         return resolved
-    }
-
-      
-      
-    AsyncFunction("anonymousID") { () -> String in
-        return TikTokBusiness().anonymousID + "asdasd"
     }
 
     AsyncFunction("identify") { (externalId: String, externalUserName: String?, phoneNumber: String?, email: String?) in
