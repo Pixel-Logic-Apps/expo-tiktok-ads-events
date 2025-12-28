@@ -21,23 +21,23 @@ export default function App() {
         (async () => {
             const {status} = await requestTrackingPermissionsAsync();
 
-            TiktokAdsEvents.initializeSdk("<APP_SECRET>", "<APP_ID>", "<APP_TIKTOK_ID>", false)//isDebugModeEnabled 
+            TiktokAdsEvents.initializeSdk("<APP_SECRET>", "<APP_ID>", "<APP_TIKTOK_ID>", false)//isDebugModeEnabled
             .then(async (result) => {
                 alert("result: " + result);
                 TiktokAdsEvents.identify("USER_ID00001");
+                TikTokLaunchApp();
+
+                // Buscar identificadores após inicialização
+                const anonymousID = await TiktokAdsEvents.getAnonymousID();
+                const accessToken = await TiktokAdsEvents.getAccessToken();
+                const testEventCode = await TiktokAdsEvents.getTestEventCode();
+                setAnonymousID(anonymousID);
+                setAccessToken(accessToken);
+                setTestEventCode(testEventCode);
             })
             .catch((error) => {
                 alert("error: " + error);
             });
-
-            
-            TikTokLaunchApp();
-            const anonymousID = await TiktokAdsEvents.getAnonymousID();
-            const accessToken = await TiktokAdsEvents.getAccessToken();
-            const testEventCode = await TiktokAdsEvents.getTestEventCode();
-            setAnonymousID(anonymousID);
-            setAccessToken(accessToken);
-            setTestEventCode(testEventCode);
         })();
     }, []);
 

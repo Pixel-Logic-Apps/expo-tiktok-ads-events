@@ -9,6 +9,11 @@ applyKotlinExpoModulesCorePlugin()
 useCoreDependencies()
 useExpoPublishing()
 
+repositories {
+  maven { url 'https://jitpack.io' }
+  maven { url "https://artifact.bytedance.com/repository/pangle" }
+}
+
 // If you want to use the managed Android SDK versions from expo-modules-core, set this to true.
 // The Android SDK versions will be bumped from time to time in SDK releases and may introduce breaking changes in your module code.
 // Most of the time, you may like to manage the Android SDK versions yourself.
@@ -40,4 +45,8 @@ android {
   lintOptions {
     abortOnError false
   }
+}
+
+dependencies {
+  implementation 'com.github.tiktok:tiktok-business-android-sdk:1.6.0'
 }
