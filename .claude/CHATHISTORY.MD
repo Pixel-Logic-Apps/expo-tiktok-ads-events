@@ -75,3 +75,18 @@ Esses warnings são do SDK do TikTok sobre métodos deprecated, mas ainda funcio
 
 ### Resultado
 **BUILD SUCCESSFUL** - APK gerado em `example/android/app/build/outputs/apk/debug/`
+
+---
+
+## 2026-01-26 - Publicação npm v0.1.4
+
+### Ações Realizadas
+1. Build TypeScript: OK
+2. Login npm como `developerpixellogicapps`
+3. Publicação com token de acesso (2FA exigido pelo npm)
+
+### Resultado
+**PUBLICADO COM SUCESSO** - expo-tiktok-ads-events@0.1.4
+- URL: https://www.npmjs.com/package/expo-tiktok-ads-events
+- Tamanho: 10.9 kB (39.5 kB descompactado)
+- 22 arquivos incluídos
