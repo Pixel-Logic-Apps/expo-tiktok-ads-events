@@ -1,4 +1,4 @@
-import TiktokAdsEvents, {TikTokLaunchApp, TikTokStandardEvents} from "expo-tiktok-ads-events";
+import TiktokAdsEvents, {TikTokLaunchApp, TikTokStandardEvents, TikTokWaitForConfig} from "expo-tiktok-ads-events";
 import {requestTrackingPermissionsAsync} from "expo-tracking-transparency";
 import {useEffect, useMemo, useState} from "react";
 import {Alert, Pressable, StyleSheet, ScrollView, Text, View} from "react-native";
@@ -16,14 +16,21 @@ export default function App() {
     const [anonymousID, setAnonymousID] = useState<string>("");
     const [accessToken, setAccessToken] = useState<string>("");
     const [testEventCode, setTestEventCode] = useState<string>("");
+    const [isConfigFetched, setIsConfigFetched] = useState<boolean>(false);
 
     useEffect(() => {
         (async () => {
-            const {status} = await requestTrackingPermissionsAsync();
+            await requestTrackingPermissionsAsync();
 
-            TiktokAdsEvents.initializeSdk("<APP_SECRET>", "<APP_ID>", "<APP_TIKTOK_ID>", false)//isDebugModeEnabled
-            .then(async (result) => {
-                alert("result: " + result);
+            await TiktokAdsEvents.initializeSdk(
+            "<APP_SECRET>", 
+            "<APP_ID>", 
+            "<APP_TIKTOK_ID>",
+            false);
+
+            // Aguardar configuração global ser carregada (timeout de 10 segundos)
+            if (await TikTokWaitForConfig(10 * 1000)) {
+                setIsConfigFetched(true);
                 TiktokAdsEvents.identify("USER_ID00001");
                 TikTokLaunchApp();
 
@@ -34,10 +41,10 @@ export default function App() {
                 setAnonymousID(anonymousID);
                 setAccessToken(accessToken);
                 setTestEventCode(testEventCode);
-            })
-            .catch((error) => {
-                alert("error: " + error);
-            });
+            } else {
+                alert("Config not loaded within timeout");
+            }
+
         })();
     }, []);
 
@@ -64,6 +71,9 @@ export default function App() {
             <SafeAreaView edges={["top", "bottom"]} style={styles.container}>
                 <ScrollView style={styles.scrollContainer} contentContainerStyle={styles.scrollContent}>
                     <Group name="Identificadores">
+                        <Text style={styles.infoText}>
+                            Config Fetched: {isConfigFetched ? "Yes" : "No"}
+                        </Text>
                         <Text style={styles.infoText}>
                             AnonymousID: {"\n"}
                             {anonymousID || "-"}

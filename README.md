@@ -178,6 +178,24 @@ await TikTokLaunchApp([
 ]);
 ```
 
+### Config Status
+
+```typescript
+import { TikTokWaitForConfig, TikTokIsConfigFetched } from 'expo-tiktok-ads-events';
+
+// Wait for global config to be fetched (with 10 second timeout)
+if (await TikTokWaitForConfig(10 * 1000)) {
+  // Config loaded successfully, safe to track events
+  await TikTokLaunchApp();
+} else {
+  // Config failed to load within timeout
+  console.warn('TikTok config not loaded');
+}
+
+// Check if config is already fetched (non-blocking)
+const isFetched = await TikTokIsConfigFetched();
+```
+
 ### Debug Information
 
 ```typescript
@@ -402,6 +420,41 @@ Get the current access token.
 Get the test event code for debugging.
 
 **Returns:** Promise<string>
+
+#### `isGlobalConfigFetched()`
+Check if the TikTok SDK global config has been fetched.
+
+**Returns:** Promise<boolean>
+
+#### `waitForConfig(timeoutMs)`
+Wait for the TikTok SDK global config to be fetched with a timeout.
+
+**Parameters:**
+- `timeoutMs` (number): Timeout in milliseconds
+
+**Returns:** Promise<boolean> - `true` if config loaded, `false` if timeout
+
+### Helper Functions
+
+#### `TikTokWaitForConfig(timeoutMs)`
+Helper function to wait for config.
+
+```typescript
+import { TikTokWaitForConfig } from 'expo-tiktok-ads-events';
+
+if (await TikTokWaitForConfig(10 * 1000)) {
+  // Config ready
+}
+```
+
+#### `TikTokIsConfigFetched()`
+Helper function to check if config is fetched.
+
+```typescript
+import { TikTokIsConfigFetched } from 'expo-tiktok-ads-events';
+
+const isFetched = await TikTokIsConfigFetched();
+```
 
 ## License
 

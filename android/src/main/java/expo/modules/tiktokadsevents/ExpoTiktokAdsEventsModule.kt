@@ -156,5 +156,41 @@ class ExpoTiktokAdsEventsModule : Module() {
         promise.reject("IDENTIFY_ERROR", e.message, e)
       }
     }
+
+    AsyncFunction("isGlobalConfigFetched") { promise: Promise ->
+      try {
+        val isFetched = TikTokBusinessSdk.isGlobalConfigFetched()
+        promise.resolve(isFetched)
+      } catch (e: Exception) {
+        Log.e("TiktokAdsEvents", "Error checking config: ${e.message}", e)
+        promise.reject("ERROR", e.message, e)
+      }
+    }
+
+    AsyncFunction("waitForConfig") { timeoutMs: Int, promise: Promise ->
+      try {
+        val startTime = System.currentTimeMillis()
+        val timeoutMillis = timeoutMs.toLong()
+        val pollInterval = 100L // 100ms
+
+        while (true) {
+          if (TikTokBusinessSdk.isGlobalConfigFetched()) {
+            promise.resolve(true)
+            return@AsyncFunction
+          }
+
+          val elapsed = System.currentTimeMillis() - startTime
+          if (elapsed >= timeoutMillis) {
+            promise.resolve(false)
+            return@AsyncFunction
+          }
+
+          Thread.sleep(pollInterval)
+        }
+      } catch (e: Exception) {
+        Log.e("TiktokAdsEvents", "Error waiting for config: ${e.message}", e)
+        promise.reject("ERROR", e.message, e)
+      }
+    }
   }
 }

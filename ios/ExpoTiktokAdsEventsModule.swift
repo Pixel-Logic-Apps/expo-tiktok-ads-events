@@ -3,7 +3,7 @@ import TikTokBusinessSDK
 import UIKit
 
 public class ExpoTiktokAdsEventsModule: Module {
-  
+
   private func addPropertiesToEvent(_ event: TikTokBaseEvent, properties: [[String: Any]]?) {
     properties?.forEach { prop in
         if let key = prop["key"] as? String,
@@ -24,7 +24,7 @@ public class ExpoTiktokAdsEventsModule: Module {
         let res = try await TikTokBusiness.initializeSdk(config)
         return res
     }
-    
+
     AsyncFunction("getAnonymousID") { () -> String in
       return TikTokBusiness.getInstance().anonymousID
     }
@@ -43,7 +43,7 @@ public class ExpoTiktokAdsEventsModule: Module {
         TikTokBusiness.trackTTEvent(customEvent)
         TikTokBusiness.explicitlyFlush()
     }
-    
+
     AsyncFunction("trackTTEvent") { (eventKey: String, properties: [[String: Any]]?) -> String in
         let map: [String: String] = [
             "achieve_level": TTEventName.achieveLevel.rawValue,
@@ -75,7 +75,7 @@ public class ExpoTiktokAdsEventsModule: Module {
         TikTokBusiness.explicitlyFlush()
         TikTokBusiness.trackTTEvent(event)
         TikTokBusiness.explicitlyFlush()
-        
+
         return resolved
     }
 
@@ -85,6 +85,29 @@ public class ExpoTiktokAdsEventsModule: Module {
         let mail = email ?? ""
         TikTokBusiness.identify(withExternalID: externalId, externalUserName: name, phoneNumber: phone, email: mail)
     }
-      
+
+    AsyncFunction("isGlobalConfigFetched") { () -> Bool in
+        return TikTokBusiness.getInstance().isGlobalConfigFetched
+    }
+
+    AsyncFunction("waitForConfig") { (timeoutMs: Int) -> Bool in
+        let startTime = Date()
+        let timeoutSeconds = Double(timeoutMs) / 1000.0
+        let pollInterval: TimeInterval = 0.1 // 100ms
+
+        while true {
+            if TikTokBusiness.getInstance().isGlobalConfigFetched {
+                return true
+            }
+
+            let elapsed = Date().timeIntervalSince(startTime)
+            if elapsed >= timeoutSeconds {
+                return false
+            }
+
+            Thread.sleep(forTimeInterval: pollInterval)
+        }
+    }
+
   }
 }

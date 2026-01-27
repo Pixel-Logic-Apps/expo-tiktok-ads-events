@@ -37,6 +37,8 @@ declare class TiktokAdsEventsModule extends NativeModule {
   getAnonymousID(): Promise<string>;
   getAccessToken(): Promise<string>;
   getTestEventCode(): Promise<string>;
+  isGlobalConfigFetched(): Promise<boolean>;
+  waitForConfig(timeoutMs: number): Promise<boolean>;
 }
 
 const TiktokAdsEvents = requireNativeModule<TiktokAdsEventsModule>('TiktokAdsEvents');
@@ -49,4 +51,12 @@ export async function TikTokLaunchApp(properties?: EventProperty[]): Promise<str
 export async function TikTokIdentify(params: { externalId: string; externalUserName?: string; phoneNumber?: string; email?: string; }): Promise<void> {
   const { externalId, externalUserName, phoneNumber, email } = params;
   return TiktokAdsEvents.identify(externalId, externalUserName, phoneNumber, email);
+}
+
+export async function TikTokWaitForConfig(timeoutMs: number): Promise<boolean> {
+  return TiktokAdsEvents.waitForConfig(timeoutMs);
+}
+
+export async function TikTokIsConfigFetched(): Promise<boolean> {
+  return TiktokAdsEvents.isGlobalConfigFetched();
 }
