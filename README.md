@@ -213,10 +213,11 @@ const testEventCode = await TiktokAdsEvents.getTestEventCode();
 
 ```typescript
 import { useEffect } from 'react';
-import TiktokAdsEvents, { 
-  TikTokLaunchApp, 
+import TiktokAdsEvents, {
+  TikTokLaunchApp,
   TikTokIdentify,
-  TikTokStandardEvents 
+  TikTokWaitForConfig,
+  TikTokStandardEvents
 } from 'expo-tiktok-ads-events';
 import { requestTrackingPermissionsAsync } from 'expo-tracking-transparency';
 
@@ -224,28 +225,32 @@ export default function App() {
   useEffect(() => {
     (async () => {
       // 1. Request tracking permission
-      const { status } = await requestTrackingPermissionsAsync();
-      
-      if (status === 'granted') {
-        // 2. Initialize SDK
-        await TiktokAdsEvents.initializeSdk(
-          'YOUR_ACCESS_TOKEN',
-          'YOUR_APP_ID',
-          'YOUR_TIKTOK_APP_ID'
-        );
-        
-        // 3. Identify user
+      await requestTrackingPermissionsAsync();
+
+      // 2. Initialize SDK
+      await TiktokAdsEvents.initializeSdk(
+        'YOUR_ACCESS_TOKEN',
+        'YOUR_APP_ID',
+        'YOUR_TIKTOK_APP_ID',
+        false // debugModeEnabled
+      );
+
+      // 3. Wait for config to be fetched (10 second timeout)
+      if (await TikTokWaitForConfig(10 * 1000)) {
+        // 4. Identify user
         await TikTokIdentify({
           externalId: 'USER_123',
           email: 'user@example.com'
         });
-        
-        // 4. Track app launch
+
+        // 5. Track app launch
         await TikTokLaunchApp();
-        
-        // 5. Get debug info
+
+        // 6. Get debug info
         const anonymousId = await TiktokAdsEvents.getAnonymousID();
         console.log('Anonymous ID:', anonymousId);
+      } else {
+        console.warn('TikTok config not loaded within timeout');
       }
     })();
   }, []);
